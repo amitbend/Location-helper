@@ -12,7 +12,7 @@ function createDialog(apiKey) {
     return [
         function (session, args) {
             session.dialogData.args = args;
-            session.beginDialog('facebook-location-resolve-dialog', { prompt: args.prompt });
+            session.beginDialog('facebook-location-resolve-dialog', { prompt: args.prompt , constantLocation : args.constantLocation });
         },
         function (session, results, next) {
             if (session.dialogData.args.reverseGeocode && results.response && results.response.place) {
@@ -50,7 +50,7 @@ function createLocationResolveDialog() {
         .onBegin(function (session, args) {
         session.dialogData.args = args;
         var promptSuffix = session.gettext(consts_1.Strings.TitleSuffixFacebook);
-        sendLocationPrompt(session, session.dialogData.args.prompt + promptSuffix).sendBatch();
+        sendLocationPrompt(session, session.dialogData.args.prompt + promptSuffix,args.constantLocation).sendBatch();
     }).onDefault(function (session) {
         var entities = session.message.entities;
         for (var i = 0; i < entities.length; i++) {
@@ -63,7 +63,7 @@ function createLocationResolveDialog() {
         sendLocationPrompt(session, prompt).sendBatch();
     });
 }
-function sendLocationPrompt(session, prompt) {
+function sendLocationPrompt(session, prompt,constantLocation) {
     var message = new botbuilder_1.Message(session).text(prompt).sourceEvent({
         facebook: {
             quick_replies: [
@@ -73,6 +73,9 @@ function sendLocationPrompt(session, prompt) {
             ]
         }
     });
+    message.suggestedActions(
+        builder.SuggestedActions.create(session,builder.CardAction.postBack(session,constantLocation.payload,constantLocation.name))
+    )
     return session.send(message);
 }
 function buildLocationFromGeo(latitude, longitude) {
