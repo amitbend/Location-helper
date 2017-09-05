@@ -1,8 +1,8 @@
 {
-  "name": "Location-helper",
+  "name": "location-helper-g",
   "author": "Gooster",
   "description": "A location helper based on MS botbuilder-location",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "main": "./lib/botbuilder-location.js",
   "dependencies": {

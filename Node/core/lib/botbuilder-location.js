@@ -51,7 +51,7 @@ function getLocationPickerPrompt(constantLocation) {
                 session.beginDialog('retrieve-favorite-location-dialog', session.dialogData.args);
             }
             else {
-                session.dialogData.args.constantLocation = constantLocation;
+                // session.dialogData.args.constantLocation = constantLocation;
                 session.beginDialog('retrieve-location-dialog', session.dialogData.args);
             }
         },

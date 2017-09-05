@@ -59,23 +59,38 @@ function createLocationResolveDialog() {
                 return;
             }
         }
+        try{
+            // incase of my kind of quick reply
+            var location = JSON.parse(session.message.text)
+            if (location.longitude && location.latitude){
+                session.endDialogWithResult({ response: { place: buildLocationFromGeo(Number(location.latitude), Number(location.longitude)) } })
+                return;
+            }
+            
+        }
+        catch(e){
+
+        }
         var prompt = session.gettext(consts_1.Strings.InvalidLocationResponseFacebook);
         sendLocationPrompt(session, prompt).sendBatch();
     });
 }
 function sendLocationPrompt(session, prompt,constantLocation) {
+    let quickArr =                 [{
+        content_type: "location"
+    }]
+    if (constantLocation){
+        quickArr.push({
+            "content_type":"text",
+            "title":constantLocation.name,
+            "payload":JSON.stringify(constantLocation.place)                
+        })
+    }
     var message = new botbuilder_1.Message(session).text(prompt).sourceEvent({
         facebook: {
-            quick_replies: [
-                {
-                    content_type: "location"
-                }
-            ]
+            quick_replies: quickArr
         }
     });
-    message.suggestedActions(
-        builder.SuggestedActions.create(session,builder.CardAction.postBack(session,constantLocation.payload,constantLocation.name))
-    )
     return session.send(message);
 }
 function buildLocationFromGeo(latitude, longitude) {
