@@ -10,12 +10,12 @@ function register(library, apiKey) {
 exports.register = register;
 function createDialog(apiKey) {
     return [
-        function (session, args) {
-            session.dialogData.args = args;
-            session.beginDialog('facebook-location-resolve-dialog', { prompt: args.prompt , constantLocation : args.constantLocation });
+        function (session, args,options) {
+            session.dialogData.options = args;
+            session.beginDialog('facebook-location-resolve-dialog', { prompt: args.prompt , constantLocation : args.constantLocation },options);
         },
         function (session, results, next) {
-            if (session.dialogData.args.reverseGeocode && results.response && results.response.place) {
+            if (session.dialogData.options.reverseGeocode && results.response && results.response.place) {
                 locationService.getLocationByPoint(apiKey, results.response.place.point.coordinates[0], results.response.place.point.coordinates[1])
                     .then(function (locations) {
                     var place;
@@ -48,10 +48,11 @@ function createDialog(apiKey) {
 function createLocationResolveDialog() {
     return common.createBaseDialog()
         .onBegin(function (session, args) {
-        session.dialogData.args = args;
+
+        session.dialogData.options = args;
         var promptSuffix = session.gettext(consts_1.Strings.TitleSuffixFacebook);
-        sendLocationPrompt(session, session.dialogData.args.prompt + promptSuffix,args.constantLocation).sendBatch();
-    }).onDefault(function (session) {
+        sendLocationPrompt(session, session.dialogData.options.prompt + promptSuffix,args.constantLocation).sendBatch();
+    }).onDefault(function (session,args) {
         var entities = session.message.entities;
         for (var i = 0; i < entities.length; i++) {
             if (entities[i].type == "Place" && entities[i].geo && entities[i].geo.latitude && entities[i].geo.longitude) {
@@ -60,10 +61,15 @@ function createLocationResolveDialog() {
             }
         }
         try{
+
             // incase of my kind of quick reply
             var location = JSON.parse(session.message.text)
             if (location.longitude && location.latitude){
                 session.endDialogWithResult({ response: { place: buildLocationFromGeo(Number(location.latitude), Number(location.longitude)) } })
+                return;
+            }
+            if (location.city){
+                session.endDialogWithResult({ response: { place : {city : true , latitude : 0, longitude : 0}  } })
                 return;
             }
             
@@ -72,11 +78,13 @@ function createLocationResolveDialog() {
 
         }
         var prompt = session.gettext(consts_1.Strings.InvalidLocationResponseFacebook);
-        sendLocationPrompt(session, prompt).sendBatch();
+        sendLocationPrompt(session, prompt,session.dialogData.options.constantLocation).sendBatch();
     });
 }
-function sendLocationPrompt(session, prompt,constantLocation) {
-    let quickArr =                 [{
+function sendLocationPrompt(session, prompt,constantLocation,extraQuicksArr) {
+    // a really bad implemenation just to make it work :|
+    var message = new botbuilder_1.Message(session).text(prompt || '');
+    let quickArr = [{
         content_type: "location"
     }]
     if (constantLocation){
@@ -86,11 +94,25 @@ function sendLocationPrompt(session, prompt,constantLocation) {
             "payload":JSON.stringify(constantLocation.place)                
         })
     }
-    var message = new botbuilder_1.Message(session).text(prompt).sourceEvent({
+    extraQuicksArr = [{
+        "content_type":"text",
+        "title":'🏙 Entire City',
+        "payload":'{"city":true}'               
+    }]
+    
+    quickArr = [...quickArr,...extraQuicksArr]
+        
+        // for more channel - enable something like that ->
+        // extraQuicksArr = [botbuilder_1.CardAction.imBack(session, "productId=1&color=green", "Green")]
+        //        message.suggestedActions(botbuilder_1.SuggestedActions.create(session,extraQuicksArr) )
+
+    message
+    .sourceEvent({
         facebook: {
             quick_replies: quickArr
         }
     });
+
     return session.send(message);
 }
 function buildLocationFromGeo(latitude, longitude) {
