@@ -50,8 +50,7 @@ function createLocationResolveDialog() {
         .onBegin(function (session, args) {
 
         session.dialogData.options = args;
-        var promptSuffix = session.gettext(consts_1.Strings.TitleSuffixFacebook);
-        sendLocationPrompt(session, session.dialogData.options.prompt + promptSuffix,args.constantLocation).sendBatch();
+        sendLocationPrompt(session, session.dialogData.options.prompt ,args.constantLocation,args.entireCity).sendBatch();
     }).onDefault(function (session,args) {
         var entities = session.message.entities;
         for (var i = 0; i < entities.length; i++) {
@@ -78,10 +77,10 @@ function createLocationResolveDialog() {
 
         }
         var prompt = session.gettext(consts_1.Strings.InvalidLocationResponseFacebook);
-        sendLocationPrompt(session, prompt,session.dialogData.options.constantLocation).sendBatch();
+        sendLocationPrompt(session, prompt,session.dialogData.options.constantLocation,session.dialogData.options.entireCity).sendBatch();
     });
 }
-function sendLocationPrompt(session, prompt,constantLocation,extraQuicksArr) {
+function sendLocationPrompt(session, prompt,constantLocation,entireCity) {
     // a really bad implemenation just to make it work :|
     var message = new botbuilder_1.Message(session).text(prompt || '');
     let quickArr = [{
@@ -94,18 +93,18 @@ function sendLocationPrompt(session, prompt,constantLocation,extraQuicksArr) {
             "payload":JSON.stringify(constantLocation.place)                
         })
     }
-    extraQuicksArr = [{
-        "content_type":"text",
-        "title":'🏙 Entire City',
-        "payload":'{"city":true}'               
-    }]
-    
-    quickArr = [...quickArr,...extraQuicksArr]
+    if (entireCity){
+        extraQuicksArr = [{
+            "content_type":"text",
+            "title":'🏙 Entire City',
+            "payload":'{"city":true}'               
+        }]
         
+        quickArr = [...quickArr,...extraQuicksArr]
+    }
         // for more channel - enable something like that ->
         // extraQuicksArr = [botbuilder_1.CardAction.imBack(session, "productId=1&color=green", "Green")]
         //        message.suggestedActions(botbuilder_1.SuggestedActions.create(session,extraQuicksArr) )
-
     message
     .sourceEvent({
         facebook: {

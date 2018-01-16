@@ -13,7 +13,7 @@ var retrieveFavoriteLocationDialog = require("./dialogs/retrieve-favorite-locati
 exports.LocationRequiredFields = requireFieldsDialog.LocationRequiredFields;
 exports.getFormattedAddressFromLocation = common.getFormattedAddressFromLocation;
 exports.Place = place_1.Place;
-exports.createLibrary = function (apiKey,constantLocation) {
+exports.createLibrary = function (apiKey,constantLocation,entireCity) {
     if (typeof apiKey === "undefined") {
         throw "'apiKey' parameter missing";
     }
@@ -24,7 +24,7 @@ exports.createLibrary = function (apiKey,constantLocation) {
     addFavoriteLocationDialog.register(lib);
     confirmDialog.register(lib);
     lib.localePath(path.join(__dirname, 'locale/'));
-    lib.dialog('locationPickerPrompt', getLocationPickerPrompt(constantLocation));
+    lib.dialog('locationPickerPrompt', getLocationPickerPrompt(constantLocation,entireCity));
     lib.dialog('start-hero-card-dialog', createDialogStartHeroCard());
     return lib;
 };
@@ -35,7 +35,7 @@ exports.getLocation = function (session, options) {
     }
     return session.beginDialog(consts_1.LibraryName + ':locationPickerPrompt', options);
 };
-function getLocationPickerPrompt(constantLocation) {
+function getLocationPickerPrompt(constantLocation,entireCity) {
     return [
         function (session, args, next) {
             session.dialogData.args = args;
@@ -89,6 +89,9 @@ function getLocationPickerPrompt(constantLocation) {
                 session.replaceDialog('locationPickerPrompt', session.dialogData.args);
             }
             else {
+                if (session.dialogData.place.city)
+                next({city : true})
+            else
                 next({ response: common.processLocation(session.dialogData.place) });
             }
         }
