@@ -12,7 +12,7 @@ function createDialog(apiKey) {
     return [
         function (session, args,options) {
             session.dialogData.options = args;
-            session.beginDialog('facebook-location-resolve-dialog', { prompt: args.prompt , constantLocation : args.constantLocation },options);
+            session.beginDialog('facebook-location-resolve-dialog', session.dialogData.options);
         },
         function (session, results, next) {
             if (session.dialogData.options.reverseGeocode && results.response && results.response.place) {
@@ -94,13 +94,11 @@ function sendLocationPrompt(session, prompt,constantLocation,entireCity) {
         })
     }
     if (entireCity){
-        extraQuicksArr = [{
+        quickArr.push({
             "content_type":"text",
             "title":'🏙 Entire City',
             "payload":'{"city":true}'               
-        }]
-        
-        quickArr = [...quickArr,...extraQuicksArr]
+        })
     }
         // for more channel - enable something like that ->
         // extraQuicksArr = [botbuilder_1.CardAction.imBack(session, "productId=1&color=green", "Green")]
