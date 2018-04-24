@@ -11,12 +11,12 @@ function createDialog() {
     return [
         function (session, args) {
             session.dialogData.args = args;
-            if (args.useNativeControl && session.message.address.channelId == 'facebook') {
+            // if (args.useNativeControl && session.message.address.channelId == 'facebook') {
                 session.beginDialog('retrieve-facebook-location-dialog', args);
-            }
-            else {
-                session.beginDialog('resolve-bing-location-dialog', args);
-            }
+            // }
+            // else {
+            //     session.beginDialog('resolve-bing-location-dialog', args);
+            // }
         },
         function (session, results, next) {
             if (results.response && results.response.place) {

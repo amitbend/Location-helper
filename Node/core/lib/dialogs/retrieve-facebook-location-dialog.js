@@ -83,9 +83,7 @@ function createLocationResolveDialog() {
 function sendLocationPrompt(session, prompt,constantLocation,entireCity) {
     // a really bad implemenation just to make it work :|
     var message = new botbuilder_1.Message(session).text(prompt || '');
-    let quickArr = [{
-        content_type: "location"
-    }]
+    let quickArr = []
     if (constantLocation){
         quickArr.push({
             "content_type":"text",
@@ -103,12 +101,25 @@ function sendLocationPrompt(session, prompt,constantLocation,entireCity) {
         // for more channel - enable something like that ->
         // extraQuicksArr = [botbuilder_1.CardAction.imBack(session, "productId=1&color=green", "Green")]
         //        message.suggestedActions(botbuilder_1.SuggestedActions.create(session,extraQuicksArr) )
-    message
-    .sourceEvent({
-        facebook: {
-            quick_replies: quickArr
-        }
-    });
+    if (session.message.address.channelId === 'facebook'){
+        quickArr.unshift({content_type: "location"})
+        message
+        .sourceEvent({
+            facebook: {
+                quick_replies: quickArr
+            }
+        });
+    }
+    else{
+        message.suggestedActions(
+            botbuilder_1.SuggestedActions.create(
+                    session, 
+                    quickArr.map((v)=>{
+                        return botbuilder_1.CardAction.postBack(session, v.payload, v.title)
+                    })
+        ));
+    }
+
 
     return session.send(message);
 }

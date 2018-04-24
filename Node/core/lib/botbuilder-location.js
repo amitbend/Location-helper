@@ -104,7 +104,7 @@ function createDialogStartHeroCard() {
         var buttons = new Array();
         for (var i = 0; i < possibleBranches.length; i++) {
             var button = new botbuilder_1.CardAction(session);
-            button.type("imBack");
+            button.type("postBack");
             button.value(possibleBranches[i]);
             button.title(possibleBranches[i]);
             buttons.push(button);
